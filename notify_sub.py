@@ -1,45 +1,70 @@
 #!/usr/bin/python3
 
-#required libraries
-import sys
+import logging
+import os
 import ssl
 import paho.mqtt.client as mqtt
 
-# called while client tries to establish connection with the server
+current_path = os.path.dirname(__file__)
+log_dir = '/var/log'
+log_path = os.path.normpath(os.path.abspath(log_dir))
+
+LOG = logging.getLogger(__name__)
+timestamp_format_string = "_%m%d%y_%H%M%S"
+
+
 def on_connect(mqttc, obj, flags, rc):
-    if rc==0:
-        print ("Subscriber Connection status code: "+str(rc)+" | Connection status: successful")
-    elif rc==1:
-        print ("Subscriber Connection status code: "+str(rc)+" | Connection status: Connection refused")
+    if rc == 0:
+        LOG.info('Subscriber Connection status code: {} | Connection status: successful'.format(rc))
+    elif rc == 1:
+        LOG.info('Subscriber Connection status code: {} | Connection status: connection refused'.format(rc))
 
-# called when a topic is successfully subscribed to
+
 def on_subscribe(mqttc, obj, mid, granted_qos):
-    print("Subscribed: "+str(mid)+" "+str(granted_qos)+"data"+str(obj))
+    LOG.info('Subscribed: {} {} data {}'.format(mid, granted_qos, obj))
 
-# called when a message is received by a topic
+
 def on_message(mqttc, obj, msg):
-    print("Received message from topic: "+msg.topic+" | QoS: "+str(msg.qos)+" | Data Received: "+str(msg.payload))
+    LOG.info('Received message from topic: {} | QoS: {} | Data Received: {}'.format(msg.topic, msg.qos, msg.payload))
 
-#creating a client with client-id=mqtt-test
-mqttc = mqtt.Client(client_id="RPiNotify")
 
-mqttc.on_connect = on_connect
-mqttc.on_subscribe = on_subscribe
-mqttc.on_message = on_message
+def main():
+    # Set up logging
+    log_file = os.path.normpath(log_path + '/' + 'rpi_notify.log')
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s : %(name)s : %(lineno)s : %(levelname)s : %(message)s',
+                        filename=log_file,
+                        filemode='w')
+    formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    LOG.setLevel(logging.DEBUG)
+    LOG.addHandler(console_handler)
 
-# Configure network encryption and authentication options. Enables SSL/TLS support.
-# adding client-side certificates and enabling tlsv1.2 support as required by aws-iot service
-mqttc.tls_set("/home/pi/root-CA.crt",
-        certfile="/home/pi/d026af591f-certificate.pem.crt",
-        keyfile="/home/pi/d026af591f-private.pem.key",
-        tls_version=ssl.PROTOCOL_TLSv1_2,
-        ciphers=None)
+    # Create a client with client-id = RPiNotify
+    mqttc = mqtt.Client(client_id="RPiNotify")
 
-# connecting to aws-account-specific-iot-endpoint
-mqttc.connect("AXBVRTRIAWLF1.iot.us-west-2.amazonaws.com", port=8883) #AWS IoT service hostname and portno
+    mqttc.on_connect = on_connect
+    mqttc.on_subscribe = on_subscribe
+    mqttc.on_message = on_message
 
-# the topic to subscribe to
-mqttc.subscribe("update", qos=1) #The names of these topics start with $aws/things/thingName/shadow."
+    # Configure network encryption and authentication options. Enables SSL/TLS support.
+    mqttc.tls_set("/home/pi/root-CA.crt",
+            certfile="/home/pi/d026af591f-certificate.pem.crt",
+            keyfile="/home/pi/d026af591f-private.pem.key",
+            tls_version=ssl.PROTOCOL_TLSv1_2,
+            ciphers=None)
 
-#automatically handles reconnecting
-mqttc.loop_forever()
+    # Connect to aws-iot endpoint
+    mqttc.connect("AXBVRTRIAWLF1.iot.us-west-2.amazonaws.com", port=8883)
+
+    # Subscribe to the notifiation topic
+    mqttc.subscribe("update/", qos=1)
+
+    # Automatically handles reconnecting
+    mqttc.loop_forever()
+
+
+if __name__ == '__main__':
+    main()
