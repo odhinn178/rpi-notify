@@ -17,6 +17,8 @@ timestamp_format_string = "_%m%d%y_%H%M%S"
 def on_connect(mqttc, obj, flags, rc):
     if rc == 0:
         LOG.info('Subscriber Connection status code: {} | Connection status: successful'.format(rc))
+        # Subscribe to the notifiation topic
+        mqttc.subscribe("notify/downstream", qos=1)
     elif rc == 1:
         LOG.info('Subscriber Connection status code: {} | Connection status: connection refused'.format(rc))
 
@@ -44,7 +46,7 @@ def main():
     LOG.addHandler(console_handler)
 
     # Create a client with client-id = RPiNotify
-    mqttc = mqtt.Client(client_id="RPiNotifySub")
+    mqttc = mqtt.Client(client_id="RPiNotify")
 
     mqttc.on_connect = on_connect
     mqttc.on_subscribe = on_subscribe
@@ -59,9 +61,6 @@ def main():
 
     # Connect to aws-iot endpoint
     mqttc.connect("AXBVRTRIAWLF1.iot.us-west-2.amazonaws.com", port=8883)
-
-    # Subscribe to the notifiation topic
-    mqttc.subscribe("notify/downstream", qos=1)
 
     # Automatically handles reconnecting
     LOG.info('Entering MQTT loop')
