@@ -3,6 +3,7 @@
 import logging
 import os
 import ssl
+import time
 import paho.mqtt.client as mqtt
 
 current_path = os.path.dirname(__file__)
@@ -31,7 +32,7 @@ def on_message(mqttc, obj, msg):
 def main():
     # Set up logging
     log_file = os.path.normpath(log_path + '/' + 'rpi_notify.log')
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s : %(name)s : %(lineno)s : %(levelname)s : %(message)s',
                         filename=log_file,
                         filemode='w')
@@ -43,7 +44,7 @@ def main():
     LOG.addHandler(console_handler)
 
     # Create a client with client-id = RPiNotify
-    mqttc = mqtt.Client(client_id="RPiNotify")
+    mqttc = mqtt.Client(client_id="RPiNotifySub")
 
     mqttc.on_connect = on_connect
     mqttc.on_subscribe = on_subscribe
@@ -60,9 +61,10 @@ def main():
     mqttc.connect("AXBVRTRIAWLF1.iot.us-west-2.amazonaws.com", port=8883)
 
     # Subscribe to the notifiation topic
-    mqttc.subscribe("update/", qos=1)
+    mqttc.subscribe("notify/downstream", qos=1)
 
     # Automatically handles reconnecting
+    LOG.info('Entering MQTT loop')
     mqttc.loop_forever()
 
 
