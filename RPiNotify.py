@@ -4,8 +4,9 @@ import paho.mqtt.client as paho
 import os
 import logging
 import ssl
-from time import sleep
-from random import uniform
+import json
+import datetime
+import time
 
 LOG = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class RPiNotify(object):
         self.mqttc.tls_set(self.cert_root, certfile=self.cert, keyfile=self.key, cert_reqs=ssl.CERT_REQUIRED,
                       tls_version=ssl.PROTOCOL_TLSv1_2, ciphers=None)
 
-        self.message_topic = 'notify/downstream'
+        self.notify_topic = 'notify/downstream'
         self.response_topic = 'notify/upstream'
 
     def close(self):
@@ -92,14 +93,14 @@ class RPiNotify(object):
     def set_message_callback(self, callback):
         self.mqttc.on_message = callback
 
-    def subscribe_to_message_topic(self):
+    def subscribe_to_notify_topic(self):
         LOG.debug('Subscribing to message topic')
-        self.mqttc.subscribe(self.message_topic, qos=1)
+        self.mqttc.subscribe(self.notify_topic, qos=1)
 
-    def publish_to_message_topic(self, msg):
+    def publish_to_notify_topic(self, msg):
         if self.connected:
             LOG.debug('Publishing to message topic: {}'.format(msg))
-            self.mqttc.publish(self.message_topic, payload=msg, qos=1)
+            self.mqttc.publish(self.notify_topic, payload=msg, qos=1)
         else:
             LOG.error('Not connected!')
 
@@ -114,3 +115,27 @@ class RPiNotify(object):
         else:
             LOG.error('Not connected!')
 
+    def send_notification(self, msg, priority):
+        if priority not in [False, True]:
+            LOG.error('Priority setting can only be False or True')
+            priority = False
+        now = datetime.datetime.utcnow()
+        msg = {
+            "timestamp" : now.isoformat(),
+            "message" : msg,
+            "priority" : priority
+        }
+        json_msg = json.dumps(msg)
+        self.publish_to_notify_topic(json_msg)
+
+    def send_acknowledgement(self, resp):
+        if resp not in [False, True]:
+            LOG.error('Response must be either False or True')
+            resp = True
+        now = datetime.datetime.utcnow()
+        msg = {
+            "timestamp" : now.isoformat(),
+            "ack" : resp
+        }
+        json_msg = json.dumps(msg)
+        self.publish_to_response_topic(json_msg)
