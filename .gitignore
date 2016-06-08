@@ -1,5 +1,8 @@
+# Python
+__pycache__
+
 # Project settings
 .idea
 
-# Key filess
+# Key files
 cert
