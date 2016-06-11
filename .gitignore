@@ -92,5 +92,5 @@ ENV/
 .idea
 
 # Config and key files
-config.py
+app/config.py
 auth/
