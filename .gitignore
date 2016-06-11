@@ -91,5 +91,6 @@ ENV/
 # pycharm project settings
 .idea
 
-# Key files
-cert
+# Config and key files
+config.py
+auth/
