@@ -75,9 +75,11 @@ class RPiNotify(object):
             LOG.error("Disconnection for {}, result = {} ".format(client, str(rc)))
 
     def _on_subscribe(self, client, obj, mid, granted_qos):
+        print('Subscription established for {}, QOS = {}, data = {}'.format(client, granted_qos, obj))
         LOG.info('Subscription established for {}, QOS = {}, data = {}'.format(client, granted_qos, obj))
 
     def _on_message(self, client, userdata, msg):
+        print('Message received: {} {}'.format(msg.topic, str(msg.payload)))
         LOG.debug('Message received: {} {}'.format(msg.topic, str(msg.payload)))
 
     def _on_log(self, client, userdata, level, buf):
@@ -85,15 +87,17 @@ class RPiNotify(object):
 
     def connect(self):
         LOG.info('Connecting to {}'.format(self.aws_host_url))
-        self.mqttc.connect(self.aws_host_url, self.aws_host_port, keepalive=60)
+        self.mqttc.connect_async(self.aws_host_url, self.aws_host_port, keepalive=60)
 
     def run(self):
         self.mqttc.loop_start()
 
     def set_message_callback(self, callback):
+        print('Setting callback {}'.format(callback))
         self.mqttc.on_message = callback
 
     def subscribe_to_notify_topic(self):
+        print('Subscribing to notify topic')
         LOG.debug('Subscribing to message topic')
         self.mqttc.subscribe(self.notify_topic, qos=1)
 
@@ -139,3 +143,9 @@ class RPiNotify(object):
         }
         json_msg = json.dumps(msg)
         self.publish_to_response_topic(json_msg)
+
+    def get_message_from_payload(self, msg):
+        payload = json.loads(msg.payload)
+        message = payload['message']
+        priority = payload['priority']
+        return message, priority
