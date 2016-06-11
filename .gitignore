@@ -93,4 +93,4 @@ ENV/
 
 # Config and key files
 app/config.py
-auth/
+app/auth/
