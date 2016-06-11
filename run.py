@@ -3,5 +3,6 @@
 from app import app
 from app import rpi_notify
 
-app.run(debug=True)
 rpi_notify.connect()
+rpi_notify.run()
+app.run(debug=True)
