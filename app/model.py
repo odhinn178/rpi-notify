@@ -1,5 +1,6 @@
 from app import app
 from app import rpi_notify
+from time import sleep
 
 
 class Message(object):
@@ -25,7 +26,7 @@ Msg = Message()
 
 
 @app.before_first_request
-def connect_and_subscribe():
+def connect():
     rpi_notify.connect()
     rpi_notify.set_message_callback(Msg.callback)
 
@@ -33,4 +34,5 @@ def connect_and_subscribe():
 @app.before_first_request
 def run():
     rpi_notify.run()
+    sleep(2.0)
     rpi_notify.subscribe_to_notify_topic()
