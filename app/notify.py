@@ -6,7 +6,7 @@ import logging
 import ssl
 import json
 import datetime
-import time
+import uuid
 
 LOG = logging.getLogger(__name__)
 
@@ -120,7 +120,9 @@ class RPiNotify(object):
             LOG.error('Priority setting can only be False or True')
             priority = False
         now = datetime.datetime.utcnow()
+        msg_id = uuid.uuid1()
         msg = {
+            "msg_id" : str(msg_id),
             "timestamp" : now.isoformat(),
             "message" : msg,
             "priority" : priority
@@ -133,7 +135,9 @@ class RPiNotify(object):
             LOG.error('Response must be either False or True')
             resp = True
         now = datetime.datetime.utcnow()
+        msg_id = uuid.uuid1()
         msg = {
+            "msg_id": str(msg_id),
             "timestamp" : now.isoformat(),
             "ack" : resp
         }
