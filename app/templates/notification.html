@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Raspberry Pi Notification Client{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Raspberry PI Notification Client</h1>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.6/socket.io.min.js"></script>
+    <script src="static/js/app.js"></script>
+</div>
+<div class="container">
+    <div class="row">
+        <p>Messages:</p>
+        <div id="log">
+
+        </div>
+    </div>
+</div>
+{% endblock %}
